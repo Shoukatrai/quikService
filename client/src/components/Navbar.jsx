@@ -7,7 +7,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Find Services", href: "#" },
-    { name: "Become a Provider", href: "#" },
+    { name: "Become a Provider", href: "/become-seller" },
     { name: "How it Works", href: "#" },
   ];
   return (

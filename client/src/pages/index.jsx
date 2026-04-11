@@ -1,5 +1,17 @@
 import Login from "./auth/Login";
-import OAuthSuccess from "./auth/OuthSuccess";
 import Signup from "./auth/Signup";
+import BecomeSeller from "./seller/BecomeSeller";
+import Earnings from "./seller/earings";
+import MyJobs from "./seller/myJobs";
+import Settings from "./seller/setting";
+import Verification from "./seller/verification";
 
-export { Signup, Login, OAuthSuccess };
+export {
+  Signup,
+  Login,
+  MyJobs,
+  Earnings,
+  Settings,
+  Verification,
+  BecomeSeller,
+};
