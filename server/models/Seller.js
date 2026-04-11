@@ -30,7 +30,7 @@ const sellerSchema = new mongoose.Schema(
       ],
     },
     skills: [{ type: String }],
-    isVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean,  default: false },
     verificationDocuments: [
       {
         docType: { type: String },
@@ -93,3 +93,5 @@ const sellerSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+export default mongoose.model("Seller", sellerSchema);

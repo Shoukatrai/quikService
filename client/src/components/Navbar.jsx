@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const navigate = useNavigate();
   const navLinks = [
     { name: "Find Services", href: "#" },
     { name: "Become a Provider", href: "/become-seller" },
@@ -24,15 +25,15 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
-              href={link.href}
+              to={link.href}
               className="text-slate-600 hover:text-indigo-600 transition-colors font-semibold text-sm tracking-wide"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
-          <button className="px-6 py-2.5 bg-slate-900 text-white rounded-full font-bold hover:bg-indigo-600 transition-all shadow-lg hover:shadow-indigo-200">
+          <button className="px-6 py-2.5 bg-slate-900 text-white rounded-full font-bold hover:bg-indigo-600 transition-all shadow-lg hover:shadow-indigo-200" onClick={()=>navigate("/login")}>
             Sign In
           </button>
         </div>
@@ -64,7 +65,7 @@ const Navbar = () => {
                 </a>
               ))}
               <hr className="border-slate-100" />
-              <button className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold">
+              <button className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold" onClick={()=>{navigate("/signup")}}>
                 Get Started
               </button>
             </div>
