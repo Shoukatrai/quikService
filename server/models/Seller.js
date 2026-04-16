@@ -16,7 +16,8 @@ const sellerSchema = new mongoose.Schema(
       required: true,
       maxlength: 500,
     },
-    profilePicture: { type: String },
+    phoneNumber: { type: String },
+    profilePicture: { type: String , default: "https://cdn-icons-png.flaticon.com/512/149/149071.png" },
     category: {
       type: String,
       required: true,
@@ -30,7 +31,7 @@ const sellerSchema = new mongoose.Schema(
       ],
     },
     skills: [{ type: String }],
-    isVerified: { type: Boolean,  default: false },
+    isVerified: { type: Boolean, default: false },
     verificationDocuments: [
       {
         docType: { type: String },
@@ -62,20 +63,11 @@ const sellerSchema = new mongoose.Schema(
       rate: { type: Number, required: true },
       currency: { type: String, default: "USD" },
     },
-    availability: [
-      {
-        day: {
-          type: String,
-          enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        },
-        slots: [
-          {
-            start: String,
-            end: String,
-          },
-        ],
-      },
-    ],
+    availability: {
+      type: String,
+      enum: ["available", "onbreak"],
+      default: "available",
+    },
     stats: {
       averageRating: { type: Number, default: 0 },
       totalReviews: { type: Number, default: 0 },

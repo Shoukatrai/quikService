@@ -5,8 +5,7 @@ import { OAuth2Client } from "google-auth-library";
 const client = new OAuth2Client();
 export const signUp = async (req, res) => {
   try {
-    console.log("body", req.body);
-    const { username, user, email, password } = req.body;
+    const { name, role, email, password } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
@@ -20,8 +19,8 @@ export const signUp = async (req, res) => {
     const newUser = await User.create({
       email,
       password: hashPass,
-      name: username,
-      role: user,
+      name,
+      role,
     });
     res.status(200).json({
       status: 200,
@@ -60,11 +59,12 @@ export const login = async (req, res) => {
       });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "1d",
+      expiresIn: "7d",
     });
+    const { pass, ...userWithoutPass } = user._doc;
     res.status(200).json({
       status: 200,
-      data: user,
+      data: userWithoutPass,
       token: token,
       message: "User logged in successfully",
     });
@@ -79,7 +79,8 @@ export const login = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
   try {
-    const { credential } = req.body; 
+    const { credential, role } = req.body; // Frontend se role bhi lein (e.g., "seller" or "client")
+
     if (!credential) {
       return res.status(400).json({ message: "No credential provided" });
     }
@@ -90,8 +91,7 @@ export const googleAuth = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-
-    const { email, given_name, family_name } = payload;
+    const { email, given_name, family_name, picture } = payload;
 
     let user = await User.findOne({ email });
 
@@ -99,26 +99,39 @@ export const googleAuth = async (req, res) => {
       user = await User.create({
         email,
         name: `${given_name} ${family_name}`,
+        avator: picture,
+        role: role || "client",
         authSource: "google",
+        isVerified: true,
       });
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" },
     );
 
     res.status(200).json({
       message: "Authentication successful",
       token,
-      user,
+      data: user,
     });
-
   } catch (err) {
     console.error("Google Auth Error:", err);
-    res.status(400).json({
+    res.status(500).json({
       message: "Authentication failed",
+      error: err.message,
     });
+  }
+};
+
+export const authMe = async (req, res) => {
+  try {
+    const user = req.user;
+    res.status(200).json({ user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong", status: 500 });
   }
 };

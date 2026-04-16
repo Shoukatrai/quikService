@@ -1,20 +1,76 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User, Lock, Bell, Globe, Camera, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayout";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { setUser } from "../../../store/counterSlice";
+import Cookies from "js-cookie";
+import { use } from "react";
 
-const Settings = ({ user }) => {
+const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
-
+  const [settings, setSettings] = useState({
+    phoneNumber: "",
+    profilePicture: "",
+    bio: "",
+    businessName: "",
+    skills: [],
+    category: "",
+    status: "",
+    rate: "",
+    portfolio: "",
+    serviceRadius: "",
+    city: "",
+  });
+  const userData = useSelector((state) => state.user);
   const tabs = [
     { id: "profile", label: "Public Profile", icon: <User size={18} /> },
     { id: "business", label: "Business Details", icon: <Globe size={18} /> },
     { id: "security", label: "Security", icon: <Lock size={18} /> },
     { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
   ];
+  const dispatch = useDispatch();
+  const base_url = import.meta.env.VITE_BACKEND_URL;
 
+  const fetchDetails = async () => {
+    try {
+      const userDetails = await axios.get(`${base_url}/seller/get_seller`, {
+        headers: {
+          applicationType: "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      setSettings({
+        ...userDetails.data.seller,
+        rate: userDetails.data.seller.pricing.rate,
+        city: userDetails.data.seller.location.city,
+      });
+      console.log("settings", userDetails.data.seller);
+      console.log("userDetails", userDetails.data.seller);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const fetchUser = async () => {
+    try {
+      const user = await axios.get(`${base_url}/auth/me`, {
+        headers: {
+          applicationType: "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log("user", user.data.user);
+      dispatch(setUser(user.data.user));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    (fetchUser(), fetchDetails());
+  }, []);
   return (
-    <SellerDashboardLayout>
+    <SellerDashboardLayout user={userData}>
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0">
           {tabs.map((tab) => (
@@ -51,13 +107,12 @@ const Settings = ({ user }) => {
                   </p>
                 </div>
 
-                {/* Avatar Upload */}
                 <div className="flex items-center gap-6">
                   <div className="relative group">
                     <div className="w-24 h-24 rounded-3xl bg-slate-100 overflow-hidden border-4 border-white shadow-md">
                       <img
                         src={
-                          user?.avatar ||
+                          settings?.profilePicture ||
                           "https://ui-avatars.com/api/?name=Seller"
                         }
                         alt="Avatar"
@@ -82,7 +137,7 @@ const Settings = ({ user }) => {
                     </label>
                     <input
                       type="text"
-                      defaultValue={user?.name}
+                      defaultValue={userData?.name}
                       className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   </div>
@@ -93,6 +148,7 @@ const Settings = ({ user }) => {
                     <input
                       type="text"
                       placeholder="+92 3473127706"
+                      value={settings?.phoneNumber || ""}
                       className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   </div>
@@ -101,6 +157,8 @@ const Settings = ({ user }) => {
                       Bio / Description
                     </label>
                     <textarea
+                      defaultValue={settings?.bio}
+                      value={settings?.bio || ""}
                       rows="4"
                       className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
                     ></textarea>
@@ -122,7 +180,6 @@ const Settings = ({ user }) => {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                  {/* Left Column: Basic Professional Info */}
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-slate-700">
@@ -130,6 +187,7 @@ const Settings = ({ user }) => {
                       </label>
                       <input
                         type="text"
+                        value={settings?.businessName || ""}
                         placeholder="e.g. ProFix Plumbing Solutions"
                         className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                       />
@@ -139,7 +197,10 @@ const Settings = ({ user }) => {
                       <label className="text-sm font-bold text-slate-700">
                         Business Category
                       </label>
-                      <select className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                      <select
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                        value={settings?.category | ""}
+                      >
                         <option value="Plumbing">Plumbing</option>
                         <option value="Electrical">Electrical</option>
                         <option value="Cleaning">Cleaning</option>
@@ -155,6 +216,7 @@ const Settings = ({ user }) => {
                       </label>
                       <input
                         type="number"
+                        value={settings?.pricing?.rate || ""}
                         placeholder="45"
                         className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                       />
@@ -167,12 +229,13 @@ const Settings = ({ user }) => {
                       <div className="flex items-center gap-4">
                         <input
                           type="range"
+                          value={settings?.serviceRadius || ""}
                           min="1"
                           max="100"
                           className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                         />
                         <span className="font-bold text-slate-700 w-12 text-right">
-                          25km
+                          {settings?.serviceRadius}
                         </span>
                       </div>
                     </div>
@@ -186,6 +249,16 @@ const Settings = ({ user }) => {
                       </label>
                       <input
                         type="text"
+                        value={
+                          settings?.skills ? settings.skills.join(", ") : ""
+                        }
+                        onChange={(e) => {
+                          const stringValue = e.target.value;
+                          const arrayValue = stringValue
+                            .split(",")
+                            .map((skill) => skill.trim());
+                          setSettings({ ...settings, skills: arrayValue });
+                        }}
                         placeholder="Pipe Repair, Installation, Gas Leak Detection"
                         className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                       />

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShieldCheck,
   Upload,
@@ -9,8 +9,12 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayout";
-
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { setUser } from "../../../store/counterSlice";
+import Cookies from "js-cookie"
 const Verification = () => {
+  const userData = useSelector((state) => state.user);
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState("pending_upload"); 
 
@@ -20,8 +24,31 @@ const Verification = () => {
     { id: 3, label: "Review", icon: <Clock size={18} /> },
   ];
 
+   const dispatch = useDispatch();
+    const base_url = import.meta.env.VITE_BACKEND_URL;
+    const fetchUser = async () => {
+      try {
+        const user = await axios.get(
+          `${base_url}/auth/me`,
+          {
+            headers: {
+              applicationType: "application/json",
+              Authorization: `Bearer ${Cookies.get("token")}`,
+            },
+          },
+        );
+        console.log("user", user.data.user);
+        dispatch(setUser(user.data.user));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    useEffect(() => {
+      fetchUser();
+    }, []);
+
   return (
-    <SellerDashboardLayout>
+    <SellerDashboardLayout user={userData}>
       <div className="max-w-4xl mx-auto pb-20">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-black text-slate-900 mb-2">
