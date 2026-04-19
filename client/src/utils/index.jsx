@@ -13,6 +13,18 @@ export const notify = ({ message, status }) => {
       theme: "light",
       transition: Bounce,
     });
+  } else if (status == "info") {
+    toast.info(message, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      transition: Bounce,
+    });
   } else {
     toast.error(message, {
       position: "top-center",

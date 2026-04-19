@@ -6,22 +6,50 @@ import {
   ShieldCheck,
   LogOut,
   X,
+  ClipboardList,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+const Sidebar = ({ isOpen, setIsOpen }) => {
+  
 
-const Sidebar = ({ isOpen, setIsOpen, role }) => {
-  const menuItems = [
-    {
-      icon: <LayoutDashboard size={20} />,
-      label: "Overview",
-      path: "/seller-dashboard",
-    },
-    { icon: <Briefcase size={20} />, label: "My Jobs", path: "/seller-jobs" },
-    { icon: <Wallet size={20} />, label: "Earnings", path: "/seller-earnings" },
-    { icon: <ShieldCheck size={20} />, label: "Verification", path: "/seller-verify" },
-    { icon: <Settings size={20} />, label: "Settings", path: "/seller-setting" },
-  ];
-
+const menuItems = [
+  {
+    icon: <LayoutDashboard size={20} />,
+    label: "Overview",
+    path: "/seller-dashboard",
+  },
+  { 
+    icon: <Briefcase size={20} />, 
+    label: "My Gigs", 
+    path: "/seller-gigs" // Manage your service posts
+  },
+  { 
+    icon: <ClipboardList size={20} />, 
+    label: "My Jobs", 
+    path: "/seller-jobs" // Manage active client bookings
+  },
+  { 
+    icon: <Wallet size={20} />, 
+    label: "Earnings", 
+    path: "/seller-earnings" 
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    label: "Verification",
+    path: "/seller-verify",
+  },
+  {
+    icon: <Settings size={20} />,
+    label: "Settings",
+    path: "/seller-setting",
+  },
+];
+  const navigate = useNavigate();
+  const logout = () => {
+    Cookies.remove("token");
+    navigate("/login");
+  };
   return (
     <>
       <div
@@ -63,7 +91,10 @@ const Sidebar = ({ isOpen, setIsOpen, role }) => {
 
           {/* Logout */}
           <div className="p-4 border-t border-white/10">
-            <button className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
+            <button
+              className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+              onClick={logout}
+            >
               <LogOut size={20} />
               <span className="font-medium">Logout</span>
             </button>

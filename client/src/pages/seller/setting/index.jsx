@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { User, Lock, Bell, Globe, Camera, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayout";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import axios from "axios";
-import { setUser } from "../../../store/counterSlice";
 import Cookies from "js-cookie";
-import { use } from "react";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -30,10 +28,9 @@ const Settings = () => {
     { id: "security", label: "Security", icon: <Lock size={18} /> },
     { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
   ];
-  const dispatch = useDispatch();
   const base_url = import.meta.env.VITE_BACKEND_URL;
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const userDetails = await axios.get(`${base_url}/seller/get_seller`, {
         headers: {
@@ -51,24 +48,11 @@ const Settings = () => {
     } catch (error) {
       console.log(error);
     }
-  };
-  const fetchUser = async () => {
-    try {
-      const user = await axios.get(`${base_url}/auth/me`, {
-        headers: {
-          applicationType: "application/json",
-          Authorization: `Bearer ${Cookies.get("token")}`,
-        },
-      });
-      console.log("user", user.data.user);
-      dispatch(setUser(user.data.user));
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  }, [base_url]);
+
   useEffect(() => {
-    (fetchUser(), fetchDetails());
-  }, []);
+    fetchDetails();
+  }, [fetchDetails]);
   return (
     <SellerDashboardLayout user={userData}>
       <div className="flex flex-col lg:flex-row gap-8">

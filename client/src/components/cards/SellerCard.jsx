@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Star, MapPin, CheckCircle, Clock } from "lucide-react";
+import HireModal from "../modals/HireModal";
 
 const SellerCard = ({ sellerData }) => {
   const skillDisplay = sellerData?.skills?.slice(0, 3).join(" • ");
-
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="max-w-sm bg-white rounded-[2.5rem] p-6 shadow-xl border border-slate-100 hover:shadow-2xl transition-all duration-300">
       <div className="relative flex justify-center mb-4">
@@ -77,10 +78,18 @@ const SellerCard = ({ sellerData }) => {
           </span>
           <span className="text-slate-400 text-sm font-bold">/hr</span>
         </div>
-        <button className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-600 transition-colors shadow-lg shadow-slate-200">
+        <button
+          className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-600 transition-colors shadow-lg shadow-slate-200"
+          onClick={() => setIsOpen(true)}
+        >
           Hire Now
         </button>
       </div>
+      <HireModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        seller={sellerData}
+      />
     </div>
   );
 };

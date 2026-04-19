@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import HeroSection from "../components/Hero";
-import Navbar from "../components/Navbar";
-import Profiles from "../components/Profiles";
+import HeroSection from "../../components/Hero";
+import Navbar from "../../components/Navbar";
+import Profiles from "../../components/Profiles";
 import axios from "axios";
 import Cookies from "js-cookie";
 
