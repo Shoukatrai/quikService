@@ -3,9 +3,10 @@ import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayou
 import { useSelector } from "react-redux";
 import Cookies from "js-cookie";
 const Earnings = () => {
-  const userData = useSelector((state) => state.user);
+   const { user } = useSelector((state) => state.user);
+    console.log("user" , user);
   return (
-    <SellerDashboardLayout user={userData}>Earnings</SellerDashboardLayout>
+    <SellerDashboardLayout user={user}>Earnings</SellerDashboardLayout>
   );
 };
 

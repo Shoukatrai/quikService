@@ -4,12 +4,17 @@ import { useSelector } from "react-redux";
 import Cookies from "js-cookie";
 import BookingCard from "../../../components/cards/BookingCard";
 import axios from "axios";
+import { Loader2, Briefcase } from "lucide-react";
 
 const MyJobs = () => {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const base_url = import.meta.env.VITE_BACKEND_URL;
-  const userData = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
+  console.log("user", user);
+
   const fetchBookings = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${base_url}/booking/getAllBookings`, {
         headers: {
@@ -17,21 +22,71 @@ const MyJobs = () => {
           Authorization: `Bearer ${Cookies.get("token")}`,
         },
       });
-      setBookings(response.data.data);
-      console.log("Booking response", response.data.data);
+      setBookings(response.data.data || []);
     } catch (error) {
       console.log("Booking error", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Status update function (Accept/Reject)
+  const handleUpdateStatus = async (bookingId, status) => {
+    try {
+      await axios.patch(
+        `${base_url}/booking/updateStatus/${bookingId}`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("token")}`,
+          },
+        },
+      );
+      // List refresh karein update ke baad
+      fetchBookings();
+    } catch (error) {
+      console.error("Status Update Error:", error);
+      alert("Failed to update booking status.");
     }
   };
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
   return (
-    <SellerDashboardLayout user={userData}>
-      {bookings.map((booking) => {
-        return <BookingCard booking={booking} key={booking?._id} onAccept={""} onReject={""} />;
-      })}
+    <SellerDashboardLayout user={user}>
+      <div className="p-6">
+        <h1 className="text-2xl font-black text-slate-900 mb-6">
+          Service Requests
+        </h1>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center min-h-100">
+            <Loader2 className="animate-spin text-indigo-600 mb-2" size={40} />
+            <p className="text-slate-500">Checking for new jobs...</p>
+          </div>
+        ) : bookings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {bookings.map((booking) => (
+              <BookingCard
+                booking={booking}
+                key={booking?._id}
+                onAccept={() => handleUpdateStatus(booking._id, "accepted")}
+                onReject={() => handleUpdateStatus(booking._id, "rejected")}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200">
+            <Briefcase className="mx-auto text-slate-300 mb-4" size={50} />
+            <h3 className="text-xl font-bold text-slate-900">No Jobs Yet</h3>
+            <p className="text-slate-500">
+              When customers book your service, they will appear here.
+            </p>
+          </div>
+        )}
+      </div>
     </SellerDashboardLayout>
   );
 };

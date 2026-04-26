@@ -43,10 +43,10 @@ const SellerHome = () => {
     joinedDate: "2024-01-15T10:30:00Z",
   };
 
-  const userData = useSelector((state) => state.user);
-  console.log("userData", userData);
+  const { user } = useSelector((state) => state.user);
+  console.log("user" , user);
   return (
-    <SellerDashboardLayout user={userData}>
+    <SellerDashboardLayout user={user}>
       <SellerCard sellerData={dummySeller} />
     </SellerDashboardLayout>
   );

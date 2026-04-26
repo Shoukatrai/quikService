@@ -12,11 +12,12 @@ import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayou
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { setUser } from "../../../store/counterSlice";
-import Cookies from "js-cookie"
+import Cookies from "js-cookie";
 const Verification = () => {
-  const userData = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
+  console.log("user", user);
   const [step, setStep] = useState(1);
-  const [status, setStatus] = useState("pending_upload"); 
+  const [status, setStatus] = useState("pending_upload");
 
   const steps = [
     { id: 1, label: "Identity", icon: <FileText size={18} /> },
@@ -24,31 +25,28 @@ const Verification = () => {
     { id: 3, label: "Review", icon: <Clock size={18} /> },
   ];
 
-   const dispatch = useDispatch();
-    const base_url = import.meta.env.VITE_BACKEND_URL;
-    const fetchUser = async () => {
-      try {
-        const user = await axios.get(
-          `${base_url}/auth/me`,
-          {
-            headers: {
-              applicationType: "application/json",
-              Authorization: `Bearer ${Cookies.get("token")}`,
-            },
-          },
-        );
-        console.log("user", user.data.user);
-        dispatch(setUser(user.data.user));
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    useEffect(() => {
-      fetchUser();
-    }, []);
+  const dispatch = useDispatch();
+  const base_url = import.meta.env.VITE_BACKEND_URL;
+  const fetchUser = async () => {
+    try {
+      const user = await axios.get(`${base_url}/auth/me`, {
+        headers: {
+          applicationType: "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log("user", user.data.user);
+      dispatch(setUser(user.data.user));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   return (
-    <SellerDashboardLayout user={userData}>
+    <SellerDashboardLayout user={user}>
       <div className="max-w-4xl mx-auto pb-20">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-black text-slate-900 mb-2">

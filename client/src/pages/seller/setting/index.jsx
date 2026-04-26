@@ -21,7 +21,8 @@ const Settings = () => {
     serviceRadius: "",
     city: "",
   });
-  const userData = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
+  console.log("user", user);
   const tabs = [
     { id: "profile", label: "Public Profile", icon: <User size={18} /> },
     { id: "business", label: "Business Details", icon: <Globe size={18} /> },
@@ -54,7 +55,7 @@ const Settings = () => {
     fetchDetails();
   }, [fetchDetails]);
   return (
-    <SellerDashboardLayout user={userData}>
+    <SellerDashboardLayout user={user}>
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0">
           {tabs.map((tab) => (

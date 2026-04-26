@@ -4,7 +4,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 
 const SellerRoute = () => {
-  const user = useSelector((state) => state.user);
+  const {user} = useSelector((state) => state.user);
   const token = Cookies.get("token");
   const location = useLocation();
 

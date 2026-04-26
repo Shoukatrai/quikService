@@ -27,7 +27,7 @@ const CreateGig = () => {
     watch,
     setValue,
     reset,
-    formState: { errors, isValid: formIsValid },
+    formState: { errors},
   } = useForm({
     mode: "onChange", // Real-time validation
     defaultValues: {

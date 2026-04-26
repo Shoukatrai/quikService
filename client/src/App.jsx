@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import Cookies from "js-cookie";
 import { Route, Routes } from "react-router-dom";
@@ -23,72 +23,92 @@ import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import MyGigs from "./pages/seller/gigs";
 import CreateGig from "./pages/seller/gigs/CreateGig";
+import JobDetails from "./pages/client/JobDetails";
+import Checkout from "./pages/client/CheckOut";
+import MyBookings from "./pages/client/MyBookings";
 
 const App = () => {
   const dispatch = useDispatch();
   const base_url = import.meta.env.VITE_BACKEND_URL;
-  const END_POINT = "http://localhost:5000";
+  const END_POINT = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000"; // Use env for production
+  
   const token = Cookies.get("token");
-  const user = useSelector((state) => state.user);
-
+  const {user} = useSelector((state) => state.user);
   const socket = useRef(null);
-  console.log("user", user, token);
-  const fetchUser = async () => {
+
+  // 1. Fetch User - Wrapped in useCallback to prevent re-creation
+  const fetchUser = useCallback(async () => {
+    if (!token) return;
     try {
-      const user = await axios.get(`${base_url}/auth/me`, {
+      const res = await axios.get(`${base_url}/auth/me`, {
         headers: {
-          applicationType: "application/json",
-          Authorization: `Bearer ${Cookies.get("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      console.log("user", user.data.user);
-      dispatch(setUser(user.data.user));
+      dispatch(setUser(res.data.user));
     } catch (error) {
-      console.log(error);
+      console.error("Auth Error:", error);
+      // Optional: Clear cookies if token is invalid
+      // Cookies.remove("token");
     }
-  };
+  }, [base_url, dispatch, token]);
+
+  // 2. Trigger fetchUser only on mount or when token changes
   useEffect(() => {
     if (token && !user) {
       fetchUser();
     }
-  });
-  useEffect(() => {
-    if (user && token && !socket.current) {
-      socket.current = io(END_POINT, {
-        query: { userId: user._id },
-        transports: ["websocket"],
-      });
+  }, [token, user, fetchUser]);
 
-      socket.current.on("connect", () => {
-        console.log("Connected to Socket.io:", socket.current.id);
-      });
-      socket.current.on("notification_request", (data) => {
-        console.log("New Notification:", data);
-        notify({ message: data.message, status: "info" });
-      });
+  // 3. Socket Logic - Consolidated and Cleaned Up
+  useEffect(() => {
+    if (user && token) {
+      if (!socket.current) {
+        socket.current = io(END_POINT, {
+          query: { userId: user._id },
+          transports: ["websocket"],
+        });
+
+        socket.current.on("connect", () => {
+          console.log("Socket Connected:", socket.current.id);
+        });
+
+        socket.current.on("notification_request", (data) => {
+          notify({ message: data.message, status: "info" });
+        });
+
+        socket.current.on("connect_error", (err) => {
+          console.error("Socket Connection Error:", err.message);
+        });
+      }
+    } else {
+      // If no user or token, disconnect existing socket
+      if (socket.current) {
+        socket.current.disconnect();
+        socket.current = null;
+      }
     }
-    if (!token && socket.current) {
-      socket.current.disconnect();
-      socket.current = null;
-      console.log("Socket Disconnected");
-    }
+
     return () => {
       if (socket.current) {
         socket.current.disconnect();
         socket.current = null;
       }
     };
-  }, [user, token]);
+  }, [user, token, END_POINT]);
 
   return (
     <>
       <Routes>
-        <Route path="*" element={<NotFound />} />
         <Route path="/" element={<Home />} />
+        
+        {/* Auth Routes (Login/Signup) */}
         <Route element={<AuthRoutes />}>
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
         </Route>
+
+        {/* Protected Seller Routes */}
         <Route element={<SellerRoute />}>
           <Route path="/seller-dashboard" element={<SellerHome />} />
           <Route path="/seller-jobs" element={<MyJobs />} />
@@ -98,20 +118,23 @@ const App = () => {
           <Route path="/seller-setting" element={<Settings />} />
           <Route path="/seller-verify" element={<Verification />} />
         </Route>
+
+        {/* Public/Client Routes */}
+        <Route path="/job-details/:id" element={<JobDetails />} />
+        <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/become-seller" element={<BecomeSeller />} />
+        <Route path="/my_bookings" element={<MyBookings />} />
+        
+        <Route path="*" element={<NotFound />} />
       </Routes>
+
       <ToastContainer
         position="top-right"
         autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
+        transition={Bounce}
+        closeOnClick
         pauseOnHover
         theme="light"
-        transition={Bounce}
       />
     </>
   );
