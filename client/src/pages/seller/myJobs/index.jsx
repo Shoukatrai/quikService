@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import BookingCard from "../../../components/cards/BookingCard";
 import axios from "axios";
 import { Loader2, Briefcase } from "lucide-react";
+import { notify } from "../../../utils";
 
 const MyJobs = () => {
   const [bookings, setBookings] = useState([]);
@@ -30,11 +31,10 @@ const MyJobs = () => {
     }
   };
 
-  // Status update function (Accept/Reject)
   const handleUpdateStatus = async (bookingId, status) => {
-    try {
+    try { 
       await axios.patch(
-        `${base_url}/booking/updateStatus/${bookingId}`,
+        `${base_url}/booking/status_update/${bookingId}`,
         { status },
         {
           headers: {
@@ -42,7 +42,7 @@ const MyJobs = () => {
           },
         },
       );
-      // List refresh karein update ke baad
+      notify({ message: `Status ${status}!`, status: "success" });
       fetchBookings();
     } catch (error) {
       console.error("Status Update Error:", error);

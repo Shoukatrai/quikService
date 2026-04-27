@@ -58,7 +58,7 @@ export const getAllPosts = async (req, res) => {
 
 export const getUserPosts = async (req, res) => {
   try {
-    const response = await Post.find().populate("seller");
+    const response = await Post.find().populate("seller").limit(3);
     console.log("gigs", response);
     res.status(200).json({
       message: "gigs received!",

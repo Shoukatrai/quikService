@@ -26,6 +26,8 @@ import CreateGig from "./pages/seller/gigs/CreateGig";
 import JobDetails from "./pages/client/JobDetails";
 import Checkout from "./pages/client/CheckOut";
 import MyBookings from "./pages/client/MyBookings";
+import Profile from "./pages/client/Profile";
+import ClientProfile from "./pages/client/Profile";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -77,6 +79,10 @@ const App = () => {
           notify({ message: data.message, status: "info" });
         });
 
+        socket.current.on("booking_status_updated", (data) => {
+          notify({ message: data.message, status: data.status });
+        });
+
         socket.current.on("connect_error", (err) => {
           console.error("Socket Connection Error:", err.message);
         });
@@ -123,7 +129,8 @@ const App = () => {
         <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/become-seller" element={<BecomeSeller />} />
-        <Route path="/my_bookings" element={<MyBookings />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/my-profile" element={<ClientProfile />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

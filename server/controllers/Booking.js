@@ -105,7 +105,9 @@ export const getALLBookings = async (req, res) => {
 export const getUserBookings = async (req, res) => {
   try {
     const userId = req.user._id;
-    const bookings = await Booking.find({ client: userId }).populate("seller").populate("gig");
+    const bookings = await Booking.find({ client: userId })
+      .populate("seller")
+      .populate("gig");
     console.log("bookings", bookings);
 
     res.status(200).json({
@@ -117,6 +119,42 @@ export const getUserBookings = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export const updateStatus = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const bookingId = req.params.bookingId;
+    const { status } = req.body;
+    const updateStatus = await Booking.findByIdAndUpdate(
+      { _id: bookingId },
+      { status }
+    ).populate("client");
+    if (!updateStatus) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    const clientUserId = updateStatus.client._id.toString().trim();
+    
+    console.log("clientUserId", clientUserId);
+    console.log("updateStatus", updateStatus?.client);
+    const activeRooms = io.sockets.adapter.rooms;
+    if (activeRooms.has(clientUserId)) {
+      io.to(clientUserId).emit("booking_status_updated", {
+        bookingId: updateStatus._id,
+        status: updateStatus.status,
+        message: `Your booking for ${updateStatus?.serviceName || updateStatus?._id } has been ${status}.`,
+      });
+    }
+
+    res.status(201).json({
+      message: "Booking status Updated",
+    });
+  } catch (error) {
+    console.log("error", error.message);
+    res.status(500).json({
+      message: "Status Update Error!",
     });
   }
 };

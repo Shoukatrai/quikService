@@ -64,7 +64,7 @@ const Checkout = () => {
       setGig(selectedGig);
       setLoading(false);
     }
-  }, [id, fetchGig]); // reduxGig removed from dependency to stop re-render loops
+  }, [id, fetchGig, selectedGig]); // reduxGig removed from dependency to stop re-render loops
 
   // Form Submit Handler
   const onSubmit = async (formData) => {
