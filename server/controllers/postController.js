@@ -13,7 +13,7 @@ export const uploadPost = async (req, res) => {
       tags,
       thumbnail,
     } = req.body;
-    const seller = await Seller.findOne({ userId: req.user.id });
+    const seller = await Seller.findOne({ user: req.user.id });
     const response = await Post.create({
       seller: seller._id,
       title,
@@ -27,8 +27,9 @@ export const uploadPost = async (req, res) => {
     });
     console.log("response", response);
     res.status(200).json({
-      message: "Post uploaded successfully",
+      message: "Gig Posted successfully",
       status: 200,
+      response,
     });
   } catch (error) {
     console.log(error);
@@ -76,9 +77,7 @@ export const getSinglePost = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findById(id).populate(
-      "seller"
-    );
+    const post = await Post.findById(id).populate("seller");
 
     if (!post) {
       return res.status(404).json({
@@ -96,6 +95,51 @@ export const getSinglePost = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
+    });
+  }
+};
+
+export const editPost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const editFields = req.body;
+
+    console.log("editFields", editFields);
+    const post = await Post.findByIdAndUpdate(
+      id,
+      { $set: editFields },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Service updated successfully",
+      post,
+    });
+  } catch (error) {
+    console.error("Error in editPost:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Post.findByIdAndDelete(id);
+    res.status(200).json({
+      success: true,
+      message: "Service deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

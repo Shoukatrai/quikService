@@ -52,6 +52,7 @@ const MyGigs = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {gigs.map((gig) => (
               <SellerGigCard
+              getAllGigs = {getAllGigs}
                 gig={gig}
                 key={gig._id}
                 onDelete={getAllGigs} // Delete ke baad refresh karne ke liye
@@ -69,7 +70,7 @@ const MyGigs = () => {
               You haven't created any services yet.
             </p>
             <Link
-              to="/dashboard/seller/create-gig"
+              to="/seller-create_gig"
               className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all inline-block"
             >
               Create Your First Gig

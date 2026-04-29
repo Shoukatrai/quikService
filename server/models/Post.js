@@ -17,9 +17,9 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please select a category"],
       enum: [
-        "Cleaning",
-        "Plumbing",
         "Electrical",
+        "Plumbing",
+        "Cleaning",
         "Moving",
         "Painting",
         "Gardening",

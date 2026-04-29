@@ -27,9 +27,9 @@ const CreateGig = () => {
     watch,
     setValue,
     reset,
-    formState: { errors},
+    formState: { errors },
   } = useForm({
-    mode: "onChange", // Real-time validation
+    mode: "onChange",
     defaultValues: {
       title: "",
       description: "",
@@ -99,15 +99,27 @@ const CreateGig = () => {
         },
       });
       console.log("Response:", response);
-      notify({
-        message: "Gig created successfully!",
-        status: "success",
-      });
+      if (response.status === 200 || response.status === 201) {
+        notify({
+          message: response.data.message || "Gig created successfully!",
+          status: "success",
+        });
+      } else {
+        notify({
+          message: response?.data?.message || "Failed to create gig",
+          status: "error",
+        });
+      }
+
       reset();
       navigate("/seller-gigs");
       console.log("Final Submission:", finalData);
     } catch (error) {
       console.log("erro", error);
+      notify({
+        message: error.response?.data?.message || "Failed to create gig",
+        status: "error",
+      });
     }
   };
 
