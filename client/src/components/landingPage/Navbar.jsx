@@ -18,10 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { removeUser } from "../../store/counterSlice";
-import { MdAdminPanelSettings } from "react-icons/md";
-
-
-
+import { MdAdminPanelSettings, MdDashboardCustomize } from "react-icons/md";
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -197,7 +194,16 @@ const Navbar = () => {
                             onClick={() => setShowProfileMenu(false)}
                             className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
                           >
-                            <MdAdminPanelSettings size={18} /> Dashboard
+                            <MdAdminPanelSettings size={18} /> Admin Dashboard
+                          </Link>
+                        ) : user.role === "seller" ? (
+                          <Link
+                            to="/seller-dashboard"
+                            onClick={() => setShowProfileMenu(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
+                          >
+                            <MdDashboardCustomize size={18} />
+                            Seller Dashboard
                           </Link>
                         ) : (
                           <Link
@@ -206,16 +212,6 @@ const Navbar = () => {
                             className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
                           >
                             <Briefcase size={18} /> My Bookings
-                          </Link>
-                        )}
-
-                        {user.role === "seller" && (
-                          <Link
-                            to="/seller-dashboard"
-                            onClick={() => setShowProfileMenu(false)}
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
-                          >
-                            <SettingsIcon size={18} /> Dashboard
                           </Link>
                         )}
 
