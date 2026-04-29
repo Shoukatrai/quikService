@@ -11,10 +11,10 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
-import Navbar from "../../components/Navbar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { notify } from "../../utils";
+import {Footer , Navbar} from "../../components";
 
 const Checkout = () => {
   const { id } = useParams();
@@ -90,7 +90,7 @@ const Checkout = () => {
         serviceName: gig?.title,
       };
 
-      console.log("orderData" , orderData);
+      console.log("orderData", orderData);
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/booking/create`,
         orderData,
@@ -385,6 +385,7 @@ const Checkout = () => {
           </div>
         </form>
       </div>
+      <Footer />
     </div>
   );
 };

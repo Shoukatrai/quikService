@@ -17,7 +17,10 @@ import { Link, useNavigate, NavLink, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { removeUser } from "../store/counterSlice";
+import { removeUser } from "../../store/counterSlice";
+import { MdAdminPanelSettings } from "react-icons/md";
+
+
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -187,13 +190,25 @@ const Navbar = () => {
                         >
                           <User size={18} /> My Profile
                         </Link>
-                        <Link
-                          to="/my-bookings"
-                          onClick={() => setShowProfileMenu(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
-                        >
-                          <Briefcase size={18} /> My Bookings
-                        </Link>
+
+                        {user.role === "admin" ? (
+                          <Link
+                            to="/admin-home"
+                            onClick={() => setShowProfileMenu(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
+                          >
+                            <MdAdminPanelSettings size={18} /> Dashboard
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/my-bookings"
+                            onClick={() => setShowProfileMenu(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-indigo-50 rounded-xl transition-all"
+                          >
+                            <Briefcase size={18} /> My Bookings
+                          </Link>
+                        )}
+
                         {user.role === "seller" && (
                           <Link
                             to="/seller-dashboard"
@@ -203,6 +218,7 @@ const Navbar = () => {
                             <SettingsIcon size={18} /> Dashboard
                           </Link>
                         )}
+
                         <hr className="my-2 border-slate-100" />
                         <button
                           onClick={handleLogout}

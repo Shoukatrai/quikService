@@ -3,39 +3,43 @@ import { io } from "socket.io-client";
 import Cookies from "js-cookie";
 import { Route, Routes } from "react-router-dom";
 import {
-  BecomeSeller,
-  Earnings,
+  Signup,
   Login,
   MyJobs,
+  Earnings,
   Settings,
-  Signup,
   Verification,
+  BecomeSeller,
+  SellerRoute,
+  NotFound,
+  Home,
+  MyGigs,
+  CreateGig,
+  JobDetails,
+  Checkout,
+  MyBookings,
+  ClientProfile,
+  ServicesPage,
+  AuthRoutes,
+  SellerHome,
+  AdminHome,
+  AdminVerificationPage,
 } from "./pages";
 import { Bounce, ToastContainer } from "react-toastify";
-import AuthRoutes from "./Routes/AuthRoutes";
-import SellerHome from "./pages/seller/Home";
 import { useDispatch, useSelector } from "react-redux";
 import { notify } from "./utils";
 import axios from "axios";
 import { setUser } from "./store/counterSlice";
-import SellerRoute from "./Routes/SellerRoute";
-import NotFound from "./pages/NotFound";
-import Home from "./pages/Home";
-import MyGigs from "./pages/seller/gigs";
-import CreateGig from "./pages/seller/gigs/CreateGig";
-import JobDetails from "./pages/client/JobDetails";
-import Checkout from "./pages/client/CheckOut";
-import MyBookings from "./pages/client/MyBookings";
-import Profile from "./pages/client/Profile";
-import ClientProfile from "./pages/client/Profile";
+import AdminRoute from "./Routes/AdminRoute";
+import OverviewPage from "./pages/seller/Home";
 
 const App = () => {
   const dispatch = useDispatch();
   const base_url = import.meta.env.VITE_BACKEND_URL;
   const END_POINT = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000"; // Use env for production
-  
+
   const token = Cookies.get("token");
-  const {user} = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
   const socket = useRef(null);
 
   // 1. Fetch User - Wrapped in useCallback to prevent re-creation
@@ -107,7 +111,7 @@ const App = () => {
     <>
       <Routes>
         <Route path="/" element={<Home />} />
-        
+
         {/* Auth Routes (Login/Signup) */}
         <Route element={<AuthRoutes />}>
           <Route path="/signup" element={<Signup />} />
@@ -116,7 +120,7 @@ const App = () => {
 
         {/* Protected Seller Routes */}
         <Route element={<SellerRoute />}>
-          <Route path="/seller-dashboard" element={<SellerHome />} />
+          <Route path="/seller-dashboard" element={<OverviewPage />} />
           <Route path="/seller-jobs" element={<MyJobs />} />
           <Route path="/seller-gigs" element={<MyGigs />} />
           <Route path="/seller-create_gig" element={<CreateGig />} />
@@ -131,7 +135,14 @@ const App = () => {
         <Route path="/become-seller" element={<BecomeSeller />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/my-profile" element={<ClientProfile />} />
-        
+        <Route path="/services" element={<ServicesPage />} />
+
+        {/* ADMIN ROUTES */}
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin-home" element={<AdminHome />} />
+          <Route path="/verify-sellers" element={<AdminVerificationPage />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
 

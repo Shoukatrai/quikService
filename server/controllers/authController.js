@@ -128,10 +128,49 @@ export const googleAuth = async (req, res) => {
 
 export const authMe = async (req, res) => {
   try {
-    const user = req.user;
-    res.status(200).json({ user });
+    const user = await User.findOne(req.user._id).populate("seller");
+    console.log("user", user);
+    res.status(200).json({ user, status: 200 });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong", status: 500 });
+  }
+};
+
+
+export const update_password = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    user.password = hash;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Password Update Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };

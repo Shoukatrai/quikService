@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import ClientGigCard from "./cards/ClientGigCard";
+import {ClientGigCard} from "../index";
 
 const FeaturedGigs = () => {
   const [gigs, setGigs] = useState([]);

@@ -1,75 +1,233 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { User, Lock, Bell, Globe, Camera, Save } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  User,
+  Lock,
+  Globe,
+  Camera,
+  Save,
+  Loader2,
+  X,
+  Plus,
+  CheckCircle,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayout";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { notify } from "../../../utils";
+import { useForm } from "react-hook-form";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [settings, setSettings] = useState({
-    phoneNumber: "",
-    profilePicture: "",
-    bio: "",
-    businessName: "",
-    skills: [],
-    category: "",
-    status: "",
-    rate: "",
-    portfolio: "",
-    serviceRadius: "",
-    city: "",
-  });
   const { user } = useSelector((state) => state.user);
-  console.log("user", user);
-  const tabs = [
-    { id: "profile", label: "Public Profile", icon: <User size={18} /> },
-    { id: "business", label: "Business Details", icon: <Globe size={18} /> },
-    { id: "security", label: "Security", icon: <Lock size={18} /> },
-    { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
-  ];
   const base_url = import.meta.env.VITE_BACKEND_URL;
+  const fileInputRef = useRef(null);
+
+  const [activeTab, setActiveTab] = useState("profile");
+  const [loading, setLoading] = useState(false);
+  const [skillInput, setSkillInput] = useState("");
+
+  // 1. React Hook Form Setup
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting, isDirty, dirtyFields },
+  } = useForm();
 
   const fetchDetails = useCallback(async () => {
     try {
-      const userDetails = await axios.get(`${base_url}/seller/get_seller`, {
-        headers: {
-          applicationType: "application/json",
-          Authorization: `Bearer ${Cookies.get("token")}`,
-        },
+      const res = await axios.get(`${base_url}/seller/get_seller`, {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` },
       });
-      setSettings({
-        ...userDetails.data.seller,
-        rate: userDetails.data.seller.pricing.rate,
-        city: userDetails.data.seller.location.city,
-      });
-      console.log("settings", userDetails.data.seller);
-      console.log("userDetails", userDetails.data.seller);
+      if (res.data.seller) {
+        reset(res.data.seller);
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Fetch Error:", error);
     }
-  }, [base_url]);
+  }, [base_url, reset]);
 
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
+
+  const onUpdateProfile = async (data) => {
+    try {
+      const updatedData = Object.keys(dirtyFields).reduce((acc, key) => {
+        acc[key] = data[key];
+        return acc;
+      }, {});
+
+      if (Object.keys(updatedData).length === 0) {
+        return notify({ message: "No changes to save", status: "info" });
+      }
+
+      const response = await axios.patch(
+        `${base_url}/seller/update_seller_details`,
+        updatedData,
+        {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+        },
+      );
+      console.log(response.data);
+      if (response.data.success) {
+        notify({ message: "Profile Updated Successfully", status: "success" });
+        reset(data);
+      }
+    } catch (error) {
+      notify({
+        message: error.message || "Failed to update profile",
+        status: "error",
+      });
+    }
+  };
+
+  // 4. Skills Logic (Instant DB Update)
+  const currentSkills = watch("skills") || [];
+
+  const addSkill = async () => {
+    const trimmedSkill = skillInput.trim();
+    if (!trimmedSkill) return;
+
+    // Duplicate check frontend par hi karle taake faltu API call na ho
+    if (currentSkills.includes(trimmedSkill)) {
+      return notify({ message: "Skill already exists", status: "info" });
+    }
+
+    setLoading(true);
+    try {
+      const res = await axios.patch(
+        `${base_url}/seller/update_seller_skills`,
+        { skill: trimmedSkill },
+        {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+        },
+      );
+
+      if (res.data.success) {
+        setValue("skills", res.data.seller.skills);
+        setSkillInput("");
+        notify({ message: "Skill Added", status: "success" });
+      }
+    } catch (err) {
+      notify({
+        message: err.response?.data?.message || "Error",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteSkill = async (skill) => {
+    try {
+      const res = await axios.patch(
+        `${base_url}/seller/delete_seller_skill`,
+        { skill }, 
+        {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+        },
+      );
+
+      if (res.data.success) {
+        setValue("skills", res.data.seller.skills);
+        notify({ message: "Skill removed successfully", status: "success" });
+      }
+    } catch (err) {
+      notify({
+        message: err.response?.data?.message || "Error removing skill",
+        status: "error",
+      });
+    }
+  };
+
+  // 5. Password Update Logic
+  const onUpdatePassword = async (data) => {
+    if (data.newPassword !== data.confirmPassword) {
+      return notify({ message: "Passwords do not match", status: "error" });
+    }
+    try {
+      const res = await axios.patch(
+        `${base_url}/auth/update_password`,
+        {
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        },
+        { headers: { Authorization: `Bearer ${Cookies.get("token")}` } },
+      );
+      if (res.data.success) {
+        notify({ message: "Password Changed!", status: "success" });
+        setValue("currentPassword", "");
+        setValue("newPassword", "");
+        setValue("confirmPassword", "");
+      } else {
+        notify({ message: res.data.message, status: "error" });
+      }
+    } catch (error) {
+      notify({
+        message: error.response?.data?.message || error.message || "Error",
+        status: "error",
+      });
+    }
+  };
+
+  // 6. Image Upload
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true);
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", "qs_upload");
+
+    try {
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/dsk0ukkps/image/upload",
+        data,
+      );
+      const url = res.data.secure_url;
+
+      await axios.put(
+        `${base_url}/seller/update_profile_picture`,
+        { url },
+        {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+        },
+      );
+      setValue("profilePicture", url);
+      notify({ message: "Avatar Updated!", status: "success" });
+    } catch (err) {
+      notify({ message: err.message || "Upload failed", status: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const tabs = [
+    { id: "profile", label: "Public Profile", icon: <User size={18} /> },
+    { id: "business", label: "Business Details", icon: <Globe size={18} /> },
+    { id: "skills", label: "Skills", icon: <Plus size={18} /> },
+    { id: "security", label: "Security", icon: <Lock size={18} /> },
+  ];
+
   return (
     <SellerDashboardLayout user={user}>
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0">
+        <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
                 activeTab === tab.id
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                  : "text-slate-500 hover:bg-white hover:text-slate-900"
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : "text-slate-500 hover:bg-white"
               }`}
             >
-              {tab.icon}
-              {tab.label}
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
@@ -79,260 +237,189 @@ const Settings = () => {
             key={activeTab}
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-slate-100"
+            className="bg-white rounded-4xl p-6 md:p-10 shadow-sm border border-slate-100"
           >
-            {activeTab === "profile" && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Public Profile
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    This information will be visible to clients.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
-                    <div className="w-24 h-24 rounded-3xl bg-slate-100 overflow-hidden border-4 border-white shadow-md">
-                      <img
-                        src={
-                          settings?.profilePicture ||
-                          "https://ui-avatars.com/api/?name=Seller"
-                        }
-                        alt="Avatar"
+            <form
+              onSubmit={handleSubmit(
+                activeTab === "security" ? onUpdatePassword : onUpdateProfile,
+              )}
+            >
+              {activeTab === "profile" && (
+                <div className="space-y-8">
+                  <div className="flex items-center gap-6">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-3xl bg-slate-100 overflow-hidden border-4 border-white shadow-md">
+                        <img
+                          src={
+                            watch("profilePicture") ||
+                            "https://ui-avatars.com/api/?name=Seller"
+                          }
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current.click()}
+                        className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg"
+                      >
+                        <Camera size={16} />
+                      </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        accept="image/*"
                       />
                     </div>
-                    <button className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
-                      <Camera size={16} />
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-lg">
+                        Profile Photo
+                      </h4>
+                      <p className="text-sm text-slate-400">
+                        Update your avatar from here.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">
+                        Display Name
+                      </label>
+                      <input
+                        {...register("businessName")}
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">
+                        Phone Number
+                      </label>
+                      <input
+                        {...register("phoneNumber")}
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="text-sm font-bold text-slate-700">
+                        Bio
+                      </label>
+                      <textarea
+                        {...register("bio")}
+                        rows="4"
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: BUSINESS */}
+              {activeTab === "business" && (
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      Category
+                    </label>
+                    <select
+                      {...register("category")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none"
+                    >
+                      <option value="Plumbing">Plumbing</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="Cleaning">Cleaning</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      Hourly Rate ($)
+                    </label>
+                    <input
+                      type="number"
+                      {...register("pricing.rate")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      City
+                    </label>
+                    <input
+                      {...register("location.city")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      Availability Status
+                    </label>
+                    <div className="flex p-1 bg-slate-100 rounded-2xl">
+                      {["available", "onbreak"].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() =>
+                            setValue("availability", s, { shouldDirty: true })
+                          }
+                          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${watch("availability") === s ? "bg-white shadow-sm text-indigo-600" : "text-slate-500"}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: SKILLS (Individual Updates) */}
+              {activeTab === "skills" && (
+                <div className="space-y-8">
+                  <div className="flex gap-2">
+                    <input
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      placeholder="Add a skill..."
+                      className="flex-1 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={addSkill}
+                      className="px-6 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700"
+                    >
+                      Add
                     </button>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800">Profile Photo</h4>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Recommended: Square JPG or PNG, min 400x400px.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">
-                      Display Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={userData?.name}
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">
-                      Phone Number
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="+92 3473127706"
-                      value={settings?.phoneNumber || ""}
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-bold text-slate-700">
-                      Bio / Description
-                    </label>
-                    <textarea
-                      defaultValue={settings?.bio}
-                      value={settings?.bio || ""}
-                      rows="4"
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "business" && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Professional Information
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    This information helps clients decide if you're the right
-                    fit for their project.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Business Name
-                      </label>
-                      <input
-                        type="text"
-                        value={settings?.businessName || ""}
-                        placeholder="e.g. ProFix Plumbing Solutions"
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Business Category
-                      </label>
-                      <select
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                        value={settings?.category | ""}
+                  <div className="flex flex-wrap gap-3">
+                    {currentSkills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full font-bold text-sm border border-indigo-100"
                       >
-                        <option value="Plumbing">Plumbing</option>
-                        <option value="Electrical">Electrical</option>
-                        <option value="Cleaning">Cleaning</option>
-                        <option value="Tutoring">Tutoring</option>
-                        <option value="Handyman">Handyman</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Hourly Rate ($)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings?.pricing?.rate || ""}
-                        placeholder="45"
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Service Radius (km)
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <input
-                          type="range"
-                          value={settings?.serviceRadius || ""}
-                          min="1"
-                          max="100"
-                          className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        {skill}{" "}
+                        <X
+                          size={14}
+                          className="cursor-pointer hover:text-red-500"
+                          onClick={() => deleteSkill(skill)}
                         />
-                        <span className="font-bold text-slate-700 w-12 text-right">
-                          {settings?.serviceRadius}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Skills & Availability */}
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Skills (Comma separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={
-                          settings?.skills ? settings.skills.join(", ") : ""
-                        }
-                        onChange={(e) => {
-                          const stringValue = e.target.value;
-                          const arrayValue = stringValue
-                            .split(",")
-                            .map((skill) => skill.trim());
-                          setSettings({ ...settings, skills: arrayValue });
-                        }}
-                        placeholder="Pipe Repair, Installation, Gas Leak Detection"
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Current Work Status
-                      </label>
-                      <div className="flex p-1 bg-slate-100 rounded-2xl">
-                        <button className="flex-1 py-3 px-4 rounded-xl bg-white shadow-sm font-bold text-indigo-600 text-sm">
-                          Available
-                        </button>
-                        <button className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-500 text-sm">
-                          On Break
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">
-                        Portfolio Highlights
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {/* Existing Portfolio Items */}
-                        <div className="aspect-square bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition-all cursor-pointer">
-                          <span className="text-2xl">+</span>
-                        </div>
-                      </div>
-                    </div>
+                      </span>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                {/* Location Search Integration */}
-                <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 flex flex-col md:flex-row gap-6 items-center">
-                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-900">
-                      Service Location
-                    </h4>
-                    <p className="text-sm text-slate-600">
-                      Update your primary service city to appear in local search
-                      results.
-                    </p>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search city..."
-                    className="w-full md:w-64 p-3 bg-white border border-indigo-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                  />
-                </div>
-              </div>
-            )}
-
-            {activeTab === "security" && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Security Settings
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    Update your password and secure your account.
-                  </p>
-                </div>
-
-                <div className="max-w-md space-y-4">
+              {/* TAB: SECURITY */}
+              {activeTab === "security" && (
+                <div className="max-w-md space-y-5">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">
                       Current Password
                     </label>
                     <input
                       type="password"
-                      underline="none"
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"
+                      {...register("currentPassword")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -341,24 +428,45 @@ const Settings = () => {
                     </label>
                     <input
                       type="password"
-                      underline="none"
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"
+                      {...register("newPassword")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
-                  <button className="text-indigo-600 font-bold text-sm hover:underline">
-                    Forgot password?
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      {...register("confirmPassword")}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ACTION BUTTON (Hide for Skills as it updates instantly) */}
+              {activeTab !== "skills" && (
+                <div className="mt-10 pt-6 border-t border-slate-100 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={
+                      isSubmitting || (activeTab !== "security" && !isDirty)
+                    }
+                    className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-indigo-600 transition-all disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : (
+                      <Save size={18} />
+                    )}
+                    {activeTab === "security"
+                      ? "Update Password"
+                      : "Save Changes"}
                   </button>
                 </div>
-              </div>
-            )}
-
-            {/* Footer Save Button */}
-            <div className="mt-10 pt-6 border-t border-slate-100 flex justify-end">
-              <button className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-lg">
-                <Save size={18} />
-                Save Changes
-              </button>
-            </div>
+              )}
+            </form>
           </motion.div>
         </div>
       </div>

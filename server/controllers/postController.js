@@ -41,7 +41,7 @@ export const uploadPost = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
   try {
-    const seller = await Seller.findOne({ userId: req.user._id });
+    const seller = await Seller.findOne({ user: req.user._id });
     const response = await Post.find({ seller: seller._id }).populate("seller");
     console.log("gigs", response);
     res.status(200).json({

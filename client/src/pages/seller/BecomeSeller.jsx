@@ -8,16 +8,16 @@ import {
   CheckCircle,
   ChevronRight,
 } from "lucide-react";
-import Navbar from "../../components/Navbar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { notify } from "../../utils";
 import { useNavigate } from "react-router-dom";
+import { Navbar } from "../../components";
 
 const BecomeSeller = () => {
   const base_url = import.meta.env.VITE_BACKEND_URL;
   const [step, setStep] = useState(1);
-const navigate = useNavigate()
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,

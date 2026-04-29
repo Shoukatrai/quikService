@@ -39,10 +39,7 @@ const MyGigs = () => {
   return (
     <SellerDashboardLayout user={user}>
       <div className="p-6">
-        {/* Header Section */}
         <GigActionBar />
-
-        {/* Loading State */}
         {loading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="animate-spin text-indigo-600 mb-2" size={40} />

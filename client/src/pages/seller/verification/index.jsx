@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ShieldCheck,
   Upload,
@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
+  Loader2,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SellerDashboardLayout from "../../../components/sellerDash/DashboardLayout";
@@ -13,37 +15,92 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { setUser } from "../../../store/counterSlice";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+
 const Verification = () => {
   const { user } = useSelector((state) => state.user);
-  console.log("user", user);
-  const [step, setStep] = useState(1);
-  const [status, setStatus] = useState("pending_upload");
-
-  const steps = [
-    { id: 1, label: "Identity", icon: <FileText size={18} /> },
-    { id: 2, label: "Professional Info", icon: <ShieldCheck size={18} /> },
-    { id: 3, label: "Review", icon: <Clock size={18} /> },
-  ];
-
   const dispatch = useDispatch();
+  const fileInputRef = useRef(null);
   const base_url = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  const { register, handleSubmit, setValue, watch } = useForm({
+    defaultValues: {
+      docType: "National ID Card",
+      docNumber: "",
+      fileUrl: "",
+    },
+  });
+
+  const uploadedFileUrl = watch("fileUrl");
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", "qs_upload");
+
+    try {
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/dsk0ukkps/image/upload",
+        data,
+      );
+      const url = res.data.secure_url;
+      setValue("fileUrl", url);
+      setPreviewUrl(url);
+    } catch (err) {
+      console.error("Upload Error:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onFinalSubmit = async (data) => {
+    if (!data.fileUrl || !data.docNumber) {
+      return alert("Please complete all identity fields");
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(`${base_url}/seller/apply_for_verification`, data, {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+      });
+      setStep(3);
+      fetchUser();
+    } catch (error) {
+      console.error(error.response?.data?.message || "Submission failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchUser = async () => {
     try {
-      const user = await axios.get(`${base_url}/auth/me`, {
-        headers: {
-          applicationType: "application/json",
-          Authorization: `Bearer ${Cookies.get("token")}`,
-        },
+      const res = await axios.get(`${base_url}/auth/me`, {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` },
       });
-      console.log("user", user.data.user);
-      dispatch(setUser(user.data.user));
+      dispatch(setUser(res.data.user));
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     fetchUser();
   }, []);
+
+  const steps = [
+    { id: 1, label: "Identity", icon: <FileText size={18} /> },
+    { id: 2, label: "Professional", icon: <ShieldCheck size={18} /> },
+    { id: 3, label: "Review", icon: <Clock size={18} /> },
+  ];
 
   return (
     <SellerDashboardLayout user={user}>
@@ -53,29 +110,24 @@ const Verification = () => {
             Get Verified
           </h1>
           <p className="text-slate-500">
-            Complete your profile verification to start receiving high-value
-            leads.
+            Complete verification to unlock "Verified Pro" status.
           </p>
         </div>
 
-        {/* Stepper UI */}
         <div className="flex justify-between items-center mb-12 px-10 relative">
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -z-10 -translate-y-1/2" />
           {steps.map((s) => (
-            <div key={s.id} className="flex flex-col items-center gap-2">
+            <div
+              key={s.id}
+              className="flex flex-col items-center gap-2 bg-slate-50 px-2"
+            >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                  step >= s.id
-                    ? "bg-indigo-600 border-indigo-600 text-white"
-                    : "bg-white border-slate-300 text-slate-400"
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${step >= s.id ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-300 text-slate-400"}`}
               >
                 {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
               </div>
               <span
-                className={`text-xs font-bold uppercase tracking-wider ${
-                  step >= s.id ? "text-indigo-600" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-black uppercase tracking-widest ${step >= s.id ? "text-indigo-600" : "text-slate-400"}`}
               >
                 {s.label}
               </span>
@@ -83,31 +135,27 @@ const Verification = () => {
           ))}
         </div>
 
-        {/* Form Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200/50 border border-slate-100"
+          layout
+          className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-slate-100"
         >
           {step === 1 && (
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-slate-800">
-                Identity Verification
+                Identity Details
               </h3>
-              <p className="text-sm text-slate-500">
-                Please upload a valid Government Issued ID (Driver's License or
-                Passport).
-              </p>
-
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">
                     Document Type
                   </label>
-                  <select className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option>National ID Card</option>
-                    <option>Driver's License</option>
-                    <option>Passport</option>
+                  <select
+                    {...register("docType", { required: true })}
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="National ID Card">National ID Card</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Driver's License">Driver's License</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -116,81 +164,95 @@ const Verification = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="ABC123456"
+                    {...register("docNumber", { required: true })}
+                    placeholder="e.g. 42101-XXXXXXX-X"
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
 
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all cursor-pointer group">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                  <Upload className="text-indigo-600" />
-                </div>
-                <p className="font-bold text-slate-700">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  PNG, JPG or PDF (max. 5MB)
-                </p>
+              {/* File Upload */}
+              <div className="space-y-4">
+                <label className="text-sm font-bold text-slate-700">
+                  Upload ID Photo
+                </label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept="image/*"
+                />
+
+                {!previewUrl ? (
+                  <div
+                    onClick={() => fileInputRef.current.click()}
+                    className="border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer"
+                  >
+                    {loading ? (
+                      <Loader2 className="mx-auto animate-spin text-indigo-600" />
+                    ) : (
+                      <Upload className="mx-auto text-slate-400 mb-2" />
+                    )}
+                    <p className="text-slate-500 text-sm font-bold">
+                      Click to upload ID front
+                    </p>
+                  </div>
+                ) : (
+                  <div className="relative rounded-3xl overflow-hidden border aspect-video">
+                    <img
+                      src={previewUrl}
+                      className="w-full h-full object-cover"
+                      alt="ID Preview"
+                    />
+                    <button
+                      onClick={() => {
+                        setPreviewUrl(null);
+                        setValue("fileUrl", "");
+                      }}
+                      className="absolute top-4 right-4 bg-white p-2 rounded-full text-red-500 shadow-lg"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end pt-6">
                 <button
-                  onClick={() => setStep(2)}
-                  className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all"
+                  onClick={() => uploadedFileUrl && setStep(2)}
+                  disabled={!uploadedFileUrl}
+                  className={`px-10 py-4 rounded-2xl font-bold shadow-lg transition-all ${uploadedFileUrl ? "bg-indigo-600 text-white hover:scale-105" : "bg-slate-200 text-slate-400 cursor-not-allowed"}`}
                 >
-                  Save & Continue
+                  Continue
                 </button>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-slate-800">
-                Professional Credentials
-              </h3>
-              <p className="text-sm text-slate-500">
-                Add any certifications or business licenses that prove your
-                expertise.
+            <div className="space-y-6 text-center">
+              <ShieldCheck size={50} className="mx-auto text-indigo-600 mb-4" />
+              <h3 className="text-xl font-bold text-slate-800">Final Step</h3>
+              <p className="text-slate-500">
+                By submitting, you agree that all provided information is
+                accurate.
               </p>
 
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                <AlertCircle className="text-amber-600 shrink-0" />
-                <p className="text-sm text-amber-800 leading-relaxed">
-                  <strong>Pro-Tip:</strong> Verified professionals with listed
-                  certifications get 3x more bookings on QuickService.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 border border-slate-100 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="text-slate-400" />
-                    <span className="font-medium">Trade_License.pdf</span>
-                  </div>
-                  <button className="text-red-500 text-sm font-bold">
-                    Remove
-                  </button>
-                </div>
-                <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-500 font-bold hover:bg-slate-50">
-                  + Add Another Certificate
-                </button>
-              </div>
-
-              <div className="flex justify-between pt-6">
+              <div className="flex gap-4 pt-6">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-10 py-4 text-slate-600 font-bold"
+                  className="flex-1 py-4 text-slate-500 font-bold"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setStep(3)}
-                  className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200"
+                  onClick={handleSubmit(onFinalSubmit)}
+                  disabled={loading}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
                 >
-                  Submit Application
+                  {loading && <Loader2 size={18} className="animate-spin" />}{" "}
+                  Submit for Review
                 </button>
               </div>
             </div>
@@ -198,18 +260,20 @@ const Verification = () => {
 
           {step === 3 && (
             <div className="text-center py-10">
-              <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock size={48} />
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={40} />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                Application Submitted!
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                Submitted Successfully!
               </h3>
-              <p className="text-slate-500 max-w-sm mx-auto mb-8">
-                Our team usually reviews applications within 24–48 hours. You'll
-                receive an email once your profile is live.
+              <p className="text-slate-500 mb-8">
+                Reviewing process takes about 24 hours.
               </p>
-              <button className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold">
-                Back to Dashboard
+              <button
+                onClick={() => navigate("/seller-dashboard")}
+                className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl"
+              >
+                Return to Dashboard
               </button>
             </div>
           )}

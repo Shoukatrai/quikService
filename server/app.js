@@ -6,6 +6,7 @@ import postRouter from "./routes/postRoute.js";
 import sellerRouter from "./routes/seller.js";
 import bookingRouter from "./routes/Booking.js";
 import notificationRouter from "./routes/Notification.js";
+import adminRouter from "./routes/adminRoute.js";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -50,6 +51,7 @@ app.use("/api/post", postRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/notification", notificationRouter);
+app.use("/api/admin", adminRouter);
 //
 
 server.listen(port, () => console.log(`Server is running on port ${port}`));

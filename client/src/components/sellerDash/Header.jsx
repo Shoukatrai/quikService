@@ -13,10 +13,10 @@ const Header = ({ toggleSidebar, user }) => {
 
         {/* Verification Status Pill */}
         <div
-          className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${user?.isVerified ? "bg-green-50 text-green-700 border border-green-100" : "bg-amber-50 text-amber-700 border border-amber-100"}`}
+          className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${user?.seller?.isVerified ? "bg-green-50 text-green-700 border border-green-100" : "bg-amber-50 text-amber-700 border border-amber-100"}`}
         >
-          {user?.isVerified ? <CheckCircle size={14} /> : <Clock size={14} />}
-          {user?.isVerified ? "Verified Pro" : "Pending Approval"}
+          {user?.seller?.isVerified ? <CheckCircle size={14} /> : <Clock size={14} />}
+          {user?.seller?.isVerified ? "Verified Pro" : "Pending Approval"}
         </div>
       </div>
 
@@ -48,7 +48,15 @@ const Header = ({ toggleSidebar, user }) => {
             </p>
           </div>
           <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm">
-            {user?.name?.charAt(0) || "S"}
+            {user?.ProfilePicture ? (
+              <img
+                src={user?.ProfilePicture}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              user?.name?.charAt(0) || "S"
+            )}
           </div>
         </div>
       </div>

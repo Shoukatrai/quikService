@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const sellerSchema = new mongoose.Schema(
   {
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -36,6 +36,7 @@ const sellerSchema = new mongoose.Schema(
       {
         docType: { type: String },
         fileUrl: { type: String },
+        docNumber:{ type: String },
         status: {
           type: String,
           enum: ["pending", "approved", "rejected"],

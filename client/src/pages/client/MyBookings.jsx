@@ -11,8 +11,8 @@ import {
   Loader2,
   PackageOpen,
 } from "lucide-react";
-import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import {Footer , Navbar} from "../../components";
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -183,6 +183,7 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

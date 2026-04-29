@@ -12,7 +12,7 @@ import {
 import { IoMdSettings } from "react-icons/io";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/Navbar";
+import {Footer , Navbar} from "../../components";
 
 const ClientProfile = () => {
   const navigate = useNavigate();
@@ -179,6 +179,7 @@ const ClientProfile = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 };

@@ -115,7 +115,6 @@ const CreateGig = () => {
     <SellerDashboardLayout>
       <div className="min-h-screen bg-slate-50 py-6 px-4">
         <div className="max-w-2xl mx-auto">
-          {/* Progress Bar */}
           <div className="flex justify-between mb-8">
             {[1, 2, 3].map((i) => (
               <div
