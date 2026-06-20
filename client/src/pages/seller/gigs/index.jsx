@@ -22,8 +22,8 @@ const MyGigs = () => {
           Authorization: `Bearer ${Cookies.get("token")}`,
         },
       });
-      console.log("Gigs:", res.data.gigs);
-      setGigs(res.data.gigs || []);
+      console.log("Gigs:", res.data.services);
+      setGigs(res.data.services || []);
     } catch (error) {
       console.log("Fetch Error:", error);
     } finally {

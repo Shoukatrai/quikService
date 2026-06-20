@@ -62,7 +62,7 @@ const sellerSchema = new mongoose.Schema(
     pricing: {
       type: { type: String, enum: ["hourly", "fixed"], default: "hourly" },
       rate: { type: Number, required: true },
-      currency: { type: String, default: "USD" },
+      currency: { type: String, default: "pkr" },
     },
     availability: {
       type: String,

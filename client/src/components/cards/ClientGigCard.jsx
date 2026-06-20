@@ -104,8 +104,8 @@ const ClientGigCard = ({ gig }) => {
               Starting at
             </span>
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-black text-slate-900">
-                ${gig.price}
+              <span className="capitalize font-black text-slate-900">
+                Rs.{gig.price}
               </span>
               <span className="text-xs font-medium text-slate-400">
                 /{gig.priceType === "hourly" ? "hr" : "pkg"}

@@ -1,7 +1,10 @@
 import React from "react";
-import { Calendar, MapPin, Clock, Check, X } from "lucide-react";
+import { Calendar, MapPin, Check, X } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // ---> Import Navigate Hook
 
 const BookingCard = ({ booking, onAccept, onReject }) => {
+  const navigate = useNavigate(); // ---> Initialize hook
+
   // Date formatting helper
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString("en-GB", {
@@ -11,17 +14,32 @@ const BookingCard = ({ booking, onAccept, onReject }) => {
     });
   };
 
+  // Card click handle karne ke liye handler
+  const handleCardClick = () => {
+    // Apne route path ke mutabiq id pass karein (jaise: /job-details/id)
+    navigate(`/job/${booking._id}`); 
+  };
+
   return (
-    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+    <div 
+      onClick={handleCardClick} // ---> Card Click Event Added
+      className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-            booking.status === 'pending' ? 'bg-amber-100 text-amber-600' : 
-            booking.status === 'accepted' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-          }`}>
+          <span
+            className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+              booking.status === "pending"
+                ? "bg-amber-100 text-amber-600"
+                : booking.status === "accepted" || booking.status === "accepted" // status standard dynamic handling
+                  ? "bg-emerald-100 text-emerald-600"
+                  : "bg-red-100 text-red-600"
+            }`}
+          >
             {booking.status}
           </span>
-          <h3 className="text-lg font-bold text-slate-900 mt-2">
+          {/* group-hover utility se pure card par hover hone se title ka color thoda badlega */}
+          <h3 className="text-lg font-bold text-slate-900 mt-2 group-hover:text-indigo-600 transition-colors">
             {booking.gigId?.title || "Service Request"}
           </h3>
         </div>
@@ -34,21 +52,31 @@ const BookingCard = ({ booking, onAccept, onReject }) => {
         </div>
         <div className="flex items-center text-slate-500 text-sm gap-2">
           <MapPin size={16} className="text-indigo-500" />
-          <span>{booking.serviceDetails?.address || "Location not provided"}</span>
+          <span className="line-clamp-1">
+            {booking.address?.house 
+              ? `${booking.address.house}, ${booking.address.area}, ${booking.address.city}`
+              : "Location not provided"}
+          </span>
         </div>
       </div>
 
-      {/* --- Yahan Check Karein: Buttons Section --- */}
+      {/* Buttons Section */}
       {booking.status === "pending" ? (
         <div className="flex gap-3 mt-4">
           <button
-            onClick={onAccept}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all"
+            onClick={(e) => {
+              e.stopPropagation(); // ---> Taake full card ka click trigger na ho
+              onAccept();
+            }}
+            className="flex-1 bg-indigo-600 text-white py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-sm"
           >
             <Check size={18} /> Accept
           </button>
           <button
-            onClick={onReject}
+            onClick={(e) => {
+              e.stopPropagation(); // ---> Taake full card ka click trigger na ho
+              onReject();
+            }}
             className="flex-1 bg-slate-50 text-slate-600 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 transition-all"
           >
             <X size={18} /> Reject

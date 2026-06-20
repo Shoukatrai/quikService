@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Seller from "../models/Seller.js";
 
 export const sellerMiddleware = async (req, res, next) => {
   try {
@@ -22,7 +23,17 @@ export const sellerMiddleware = async (req, res, next) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    const seller = await Seller.findOne({ user: user._id });
+
+    if (!seller) {
+      return res.status(404).json({ message: "Seller profile not found" });
+    }
+    if (seller.isVerified === false) {
+      return res.status(403).json({ message: "Seller not verified yet" });
+    }
+
     req.user = user;
+    req.seller = seller;
 
     next();
   } catch (error) {

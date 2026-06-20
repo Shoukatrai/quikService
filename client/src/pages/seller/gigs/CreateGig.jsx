@@ -79,7 +79,7 @@ const CreateGig = () => {
     if (output) setStep((s) => s + 1);
   };
   const navigate = useNavigate();
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     try {
       if (!data.thumbnail) {
         notify({
@@ -92,7 +92,7 @@ const CreateGig = () => {
         ...data,
         tags: data.tags ? data.tags.split(",").map((t) => t.trim()) : [],
       };
-      const response = axios.post(`${base_url}/post/upload-post`, finalData, {
+      const response = await axios.post(`${base_url}/post/upload-post`, finalData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${Cookies.get("token")}`,
@@ -113,7 +113,6 @@ const CreateGig = () => {
 
       reset();
       navigate("/seller-gigs");
-      console.log("Final Submission:", finalData);
     } catch (error) {
       console.log("erro", error);
       notify({
@@ -238,7 +237,7 @@ const CreateGig = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">
-                        Price ($)
+                        Price (PKR)
                       </label>
                       <input
                         type="number"

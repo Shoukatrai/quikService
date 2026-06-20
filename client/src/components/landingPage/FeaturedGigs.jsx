@@ -19,7 +19,7 @@ const FeaturedGigs = () => {
           },
         }
       );
-      setGigs(response.data.gigs || []);
+      setGigs(response.data.services || []);
     } catch (err) {
       console.error("Error fetching gigs:", err);
     } finally {

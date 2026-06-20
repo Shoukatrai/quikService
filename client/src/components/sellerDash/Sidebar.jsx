@@ -7,10 +7,10 @@ import {
   X,
   ClipboardList,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom"; 
+import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-  const location = useLocation(); 
+  const location = useLocation();
 
   const menuItems = [
     {
@@ -18,7 +18,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       label: "Overview",
       path: "/seller-dashboard",
     },
-    { icon: <Briefcase size={20} />, label: "My Gigs", path: "/seller-gigs" },
+    {
+      icon: <Briefcase size={20} />,
+      label: "My Services",
+      path: "/seller-gigs",
+    },
     {
       icon: <ClipboardList size={20} />,
       label: "My Jobs",

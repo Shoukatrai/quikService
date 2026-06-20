@@ -32,6 +32,7 @@ import axios from "axios";
 import { setUser } from "./store/counterSlice";
 import AdminRoute from "./Routes/AdminRoute";
 import OverviewPage from "./pages/seller/Home";
+import JobPreview from "./pages/seller/myJobs/Job_Preview";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -127,6 +128,7 @@ const App = () => {
           <Route path="/seller-earnings" element={<Earnings />} />
           <Route path="/seller-setting" element={<Settings />} />
           <Route path="/seller-verify" element={<Verification />} />
+          <Route path="/job/:id" element={<JobPreview />} />
         </Route>
 
         {/* Public/Client Routes */}
@@ -159,3 +161,4 @@ const App = () => {
 };
 
 export default App;
+

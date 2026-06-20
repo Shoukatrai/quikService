@@ -6,6 +6,7 @@ const client = new OAuth2Client();
 export const signUp = async (req, res) => {
   try {
     const { name, role, email, password } = req.body;
+    console.log("Request Body:", req.body);
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
@@ -136,7 +137,6 @@ export const authMe = async (req, res) => {
     res.status(500).json({ message: "Something went wrong", status: 500 });
   }
 };
-
 
 export const update_password = async (req, res) => {
   try {

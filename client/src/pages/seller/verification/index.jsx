@@ -17,6 +17,7 @@ import { setUser } from "../../../store/counterSlice";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { notify } from "../../../utils";
 
 const Verification = () => {
   const { user } = useSelector((state) => state.user);
@@ -73,6 +74,10 @@ const Verification = () => {
         headers: { Authorization: `Bearer ${Cookies.get("token")}` },
       });
       setStep(3);
+      notify({
+        message: "Verification submitted successfully!",
+        status: "success",
+      });
       fetchUser();
     } catch (error) {
       console.error(error.response?.data?.message || "Submission failed");

@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 import Cookies from "js-cookie";
 import { notify } from "../../utils";
-import {Footer , Navbar} from "../../components";
+import { Footer, Navbar } from "../../components";
 
 const Checkout = () => {
   const { id } = useParams();
@@ -22,6 +22,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const base_url = import.meta.env.VITE_BACKEND_URL;
+
   // Redux Store se Gig data nikalna
   const selectedGig = useSelector((state) => state.gig.gig);
   const [gig, setGig] = useState(selectedGig);
@@ -41,10 +42,18 @@ const Checkout = () => {
     },
   });
 
-  // Price Calculation
-  const serviceFee = 2.5;
+  // --- START PERCENTAGE CALCULATION ---
   const subtotal = parseFloat(gig?.price || 0);
-  const totalPrice = (subtotal + serviceFee).toFixed(2);
+
+  // Dynamic 2.5% Service Fee Algorithm
+  const calculatedFee = subtotal * 0.025;
+
+  // String Formats (.toFixed(2)) display aur backend payloads ke liye
+  const displaySubtotal = subtotal.toFixed(2);
+  const displayServiceFee = calculatedFee.toFixed(2);
+  const totalPrice = (subtotal + calculatedFee).toFixed(2);
+  // --- END PERCENTAGE CALCULATION ---
+
   const fetchGig = useCallback(async () => {
     try {
       setLoading(true);
@@ -57,6 +66,7 @@ const Checkout = () => {
       setLoading(false);
     }
   }, [id, base_url]);
+
   useEffect(() => {
     if (!selectedGig) {
       fetchGig();
@@ -64,7 +74,7 @@ const Checkout = () => {
       setGig(selectedGig);
       setLoading(false);
     }
-  }, [id, fetchGig, selectedGig]); // reduxGig removed from dependency to stop re-render loops
+  }, [id, fetchGig, selectedGig]);
 
   // Form Submit Handler
   const onSubmit = async (formData) => {
@@ -86,11 +96,12 @@ const Checkout = () => {
         },
         requirements: formData.requirements,
         totalAmount: totalPrice,
-        serviceFee: serviceFee,
+        serviceFee: displayServiceFee,
         serviceName: gig?.title,
       };
 
-      console.log("orderData", orderData);
+      console.log("orderData mapping check:", orderData);
+
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/booking/create`,
         orderData,
@@ -104,7 +115,7 @@ const Checkout = () => {
 
       if (response.status === 201 || response.status === 200) {
         notify({ message: "Order placed successfully!", status: "success" });
-        navigate("/my_bookings");
+        navigate("/my-bookings");
       }
     } catch (err) {
       console.error("Checkout Error:", err);
@@ -125,8 +136,9 @@ const Checkout = () => {
       <div className="max-w-6xl mx-auto px-4 py-10">
         {/* Back Button */}
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold mb-8 transition-colors"
+          className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold mb-8 transition-colors bg-transparent border-none outline-none cursor-pointer"
         >
           <ArrowLeft size={18} /> Back to Service
         </button>
@@ -232,7 +244,7 @@ const Checkout = () => {
                         required: "Phone number is required",
                         pattern: {
                           value: /^[0-9]{11}$/,
-                          message: "Must be 11 digits (e.03xxxxxxxxx)",
+                          message: "Must be 11 digits (e.g. 03xxxxxxxxx)",
                         },
                       })}
                       type="tel"
@@ -329,11 +341,11 @@ const Checkout = () => {
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-slate-500 font-bold text-sm uppercase tracking-wider">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Rs. {displaySubtotal}</span>
                 </div>
                 <div className="flex justify-between text-slate-500 font-bold text-sm uppercase tracking-wider">
-                  <span>Booking Fee</span>
-                  <span>${serviceFee.toFixed(2)}</span>
+                  <span>Booking Fee (2.5%)</span>
+                  <span>Rs. {displayServiceFee}</span>
                 </div>
                 <div className="pt-6 border-t border-slate-100 flex justify-between items-end">
                   <div className="flex flex-col">
@@ -341,7 +353,7 @@ const Checkout = () => {
                       Total Amount
                     </span>
                     <span className="text-indigo-600 font-black text-4xl leading-none tracking-tight">
-                      ${totalPrice}
+                      Rs. {totalPrice}
                     </span>
                   </div>
                 </div>

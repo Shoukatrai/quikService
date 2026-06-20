@@ -12,7 +12,7 @@ import {
   Home,
   Smartphone,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {  AnimatePresence , motion} from "framer-motion";
 import { Link, useNavigate, NavLink, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -34,23 +34,22 @@ const Navbar = () => {
   const { user } = useSelector((state) => state.user);
   const token = Cookies.get("token");
 
-  // --- Functions ---
 
-  const fetchNotifications = async () => {
-    if (!token || !user) return;
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/notification/get-all-notifications`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      setNotifications(res.data.notifications || []);
-      setUnreadCount(res.data.unreadCount);
-    } catch (err) {
-      console.error("Fetch Error:", err);
-    }
-  };
+  // const fetchNotifications = async () => {
+  //   if (!token || !user) return;
+  //   try {
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_BACKEND_URL}/notification/get-all-notifications`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
+  //     setNotifications(res.data.notifications || []);
+  //     setUnreadCount(res.data.unreadCount);
+  //   } catch (err) {
+  //     console.error("Fetch Error:", err);
+  //   }
+  // };
 
   const handleMarkAsRead = async () => {
     try {
@@ -79,8 +78,8 @@ const Navbar = () => {
   // --- Effects ---
 
   useEffect(() => {
-    fetchNotifications();
-  }, [location.pathname, user]);
+    // fetchNotifications();
+  }, [ location.pathname, user]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

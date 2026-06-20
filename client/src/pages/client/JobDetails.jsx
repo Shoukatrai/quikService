@@ -186,7 +186,7 @@ const JobDetails = () => {
                     Starting from
                   </p>
                   <h2 className="text-5xl font-black text-slate-950 tracking-tighter">
-                    ${selectedGig?.price}
+                    Rs.{selectedGig?.price}
                   </h2>
                 </div>
                 <span className="bg-slate-50 px-4 py-2 rounded-xl text-xs font-black text-slate-500 uppercase border border-slate-100">

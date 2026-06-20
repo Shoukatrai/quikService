@@ -92,7 +92,7 @@ const SellerGigCard = ({ gig, getAllGigs }) => {
               Starting from
             </p>
             <p className="text-lg font-black text-indigo-600">
-              {gig.price}
+              PKR {gig.price}
               <span className="text-xs font-medium text-slate-400">
                 /{gig.priceType === "hourly" ? "hr" : "fix"}
               </span>

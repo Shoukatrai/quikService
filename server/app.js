@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { dbConnection } from "./db/dbConnection.js";
 import authRouter from "./routes/authRoutes.js";
-import postRouter from "./routes/postRoute.js";
+import postRouter from "./routes/serviceRoute.js";
 import sellerRouter from "./routes/seller.js";
 import bookingRouter from "./routes/Booking.js";
 import notificationRouter from "./routes/Notification.js";

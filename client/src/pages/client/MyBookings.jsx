@@ -12,16 +12,13 @@ import {
   PackageOpen,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {Footer , Navbar} from "../../components";
+import { Footer, Navbar } from "../../components";
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all"); 
+  const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
-  useEffect(() => {
-    fetchBookings();
-  }, []);
 
   const fetchBookings = async () => {
     try {
@@ -39,6 +36,9 @@ const MyBookings = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchBookings();
+  }, []);
 
   const filteredBookings = bookings.filter((b) =>
     filter === "all" ? true : b.status === filter,
@@ -128,8 +128,7 @@ const MyBookings = () => {
                       <div className="flex items-center gap-2 text-slate-500">
                         <MapPin size={16} className="text-slate-400" />
                         <span className="text-sm font-bold">
-                          {booking.address?.city},{" "}
-                          {booking.address?.area}
+                          {booking.address?.city}, {booking.address?.area}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-500">
@@ -148,7 +147,7 @@ const MyBookings = () => {
                         Total Paid
                       </p>
                       <p className="text-3xl font-black text-indigo-600">
-                        ${booking.totalAmount}
+                        Rs. {booking.totalAmount}
                       </p>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase italic">
                         {booking.paymentMethod}

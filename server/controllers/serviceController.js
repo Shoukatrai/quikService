@@ -1,8 +1,9 @@
-import Post from "../models/Post.js";
 import Seller from "../models/Seller.js";
+import Services from "../models/Services.js";
 
 export const uploadPost = async (req, res) => {
   try {
+    const seller = req.seller;
     const {
       title,
       description,
@@ -13,8 +14,7 @@ export const uploadPost = async (req, res) => {
       tags,
       thumbnail,
     } = req.body;
-    const seller = await Seller.findOne({ user: req.user.id });
-    const response = await Post.create({
+    const response = await Services.create({
       seller: seller._id,
       title,
       description,
@@ -27,7 +27,7 @@ export const uploadPost = async (req, res) => {
     });
     console.log("response", response);
     res.status(200).json({
-      message: "Gig Posted successfully",
+      message: "Service Posted successfully",
       status: 200,
       response,
     });
@@ -43,11 +43,13 @@ export const uploadPost = async (req, res) => {
 export const getAllPosts = async (req, res) => {
   try {
     const seller = await Seller.findOne({ user: req.user._id });
-    const response = await Post.find({ seller: seller._id }).populate("seller");
-    console.log("gigs", response);
+    const response = await Services.find({ seller: seller._id }).populate(
+      "seller",
+    );
+    console.log("services", response);
     res.status(200).json({
-      message: "gigs received!",
-      gigs: response,
+      message: "services received!",
+      services: response,
     });
   } catch (error) {
     console.log(error.message);
@@ -59,11 +61,11 @@ export const getAllPosts = async (req, res) => {
 
 export const getUserPosts = async (req, res) => {
   try {
-    const response = await Post.find().populate("seller").limit(3);
-    console.log("gigs", response);
+    const response = await Services.find().populate("seller").limit(3);
+    console.log("services", response);
     res.status(200).json({
-      message: "gigs received!",
-      gigs: response,
+      message: "services received!",
+      services: response,
     });
   } catch (error) {
     console.log(error.message);
@@ -77,7 +79,7 @@ export const getSinglePost = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findById(id).populate("seller");
+    const post = await Services.findById(id).populate("seller");
 
     if (!post) {
       return res.status(404).json({
@@ -105,7 +107,7 @@ export const editPost = async (req, res) => {
     const editFields = req.body;
 
     console.log("editFields", editFields);
-    const post = await Post.findByIdAndUpdate(
+    const post = await Services.findByIdAndUpdate(
       id,
       { $set: editFields },
       {
@@ -131,7 +133,7 @@ export const editPost = async (req, res) => {
 export const deletePost = async (req, res) => {
   try {
     const { id } = req.params;
-    await Post.findByIdAndDelete(id);
+    await Services.findByIdAndDelete(id);
     res.status(200).json({
       success: true,
       message: "Service deleted successfully",
