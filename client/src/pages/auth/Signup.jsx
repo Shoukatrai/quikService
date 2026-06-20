@@ -173,7 +173,7 @@ const Signup = () => {
                 />
                 <input
                   type="password"
-                  placeholder="Create Secure Password"
+                  placeholder="Create Password"
                   {...register("password", {
                     required: "Password is required",
                   })}
@@ -197,9 +197,9 @@ const Signup = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-slate-950 hover:bg-brand-primary text-white py-4 rounded-marketplace font-bold text-sm tracking-wide transition-all duration-300 shadow-md active:scale-95 mt-2 flex items-center justify-center"
+              className="bg-slate-950 rounded-xl hover:bg-brand-primary text-white py-4 rounded-marketplace font-bold text-sm tracking-wide transition-all duration-300 shadow-md active:scale-95 mt-2 flex items-center justify-center"
             >
-              {loading ? "Creating account..." : "Create Account & Continue"}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
@@ -209,7 +209,7 @@ const Signup = () => {
             </span>{" "}
             <Link
               to="/login"
-              className="text-brand-primary font-black hover:underline ml-1"
+              className="text-brand-primary font-black text-indigo-600 hover:underline ml-1"
             >
               Log in
             </Link>

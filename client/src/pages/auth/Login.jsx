@@ -186,7 +186,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-slate-950 hover:bg-brand-primary text-white py-4 rounded-marketplace font-bold text-sm tracking-wide transition-all duration-300 shadow-md active:scale-95 mt-2"
+              className="bg-slate-950 hover:bg-brand-primary rounded-xl text-white py-4 rounded-marketplace font-bold text-sm tracking-wide transition-all duration-300 shadow-md active:scale-95 mt-2"
             >
               {loading ? "Signing in..." : "Log in"}
             </button>
@@ -198,7 +198,7 @@ const Login = () => {
             </span>{" "}
             <Link
               to="/signup"
-              className="text-brand-primary font-black hover:underline ml-1"
+              className="text-brand-primary font-black text-indigo-600 hover:underline ml-1"
             >
               Create account
             </Link>
